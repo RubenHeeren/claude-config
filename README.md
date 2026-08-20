@@ -79,9 +79,12 @@ The `SessionStart` hook compares `HEAD` against `origin` with `git ls-remote`, w
 downloads no objects, so the usual "already current" case is one cheap round trip. When the
 remote is ahead it pulls fast-forward only and re-runs the installer.
 
-It does nothing, silently, when: the last check was under 4 hours ago, the network is
-unreachable, the working tree is dirty, or the branch has diverged. Set
-`CLAUDE_CONFIG_CHECK_HOURS` to change the interval.
+It checks on every restart. `SessionStart` fires about five times per restart, so a 30
+second guard collapses that burst into one check; any real restart is minutes apart and is
+never affected. Set `CLAUDE_CONFIG_CHECK_SECONDS` to change the guard.
+
+It does nothing, silently, when the network is unreachable, the working tree is dirty, or
+the branch has diverged.
 
 The clone must live at `~/claude-config` for the hook path to resolve. That is why the path
 is under `$HOME` rather than somewhere tidier.

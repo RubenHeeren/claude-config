@@ -23,7 +23,11 @@ exec >/dev/null 2>&1
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)" || exit 0
 stamp="$HOME/.claude/.claude-config-checked"
 logfile="$HOME/.claude/claude-config-update.log"
-interval_hours="${CLAUDE_CONFIG_CHECK_HOURS:-4}"
+# Seconds, not hours: the point is to check on every restart. This only exists to collapse
+# the burst of SessionStart firings into one check. Five fire per restart, a few seconds
+# apart, and the lock is released between them, so without this each would hit the network.
+# Any real restart is minutes apart and checks normally.
+interval_seconds="${CLAUDE_CONFIG_CHECK_SECONDS:-30}"
 
 # A background script that exits silently on nine different conditions is unmaintainable
 # without a trace. Appended, not overwritten: SessionStart fires more than once per restart
@@ -77,14 +81,14 @@ file_mtime() {
 
 if [ -f "$stamp" ]; then
     age=$(( $(date +%s) - $(file_mtime "$stamp") ))
-    if [ "$age" -lt $(( interval_hours * 3600 )) ]; then log "throttled, ${age}s since last check"; exit 0; fi
+    if [ "$age" -lt "$interval_seconds" ]; then log "same restart (${age}s since last check), skipping"; exit 0; fi
 fi
 
 cd "$repo_dir" || { log "cd failed"; exit 0; }
 git rev-parse --git-dir >/dev/null 2>&1 || { log "not a git repo"; exit 0; }
 
-# Stamp before the network call, not after. Offline sessions then wait out the interval
-# instead of retrying a failing fetch on every single startup.
+# Stamp before the network call, not after, so the other firings of this same restart see
+# it even if the network call is slow or fails.
 mkdir -p "$(dirname "$stamp")"
 touch "$stamp"
 
