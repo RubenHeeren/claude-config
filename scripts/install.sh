@@ -102,6 +102,16 @@ WANTED = [
         },
     },
     {
+        "label": "update notice",
+        "event": "UserPromptSubmit",
+        "matcher": None,
+        "hook": {
+            "type": "command",
+            "command": 'bash "$HOME/claude-config/scripts/notify-pending-update.sh"',
+            "timeout": 10,
+        },
+    },
+    {
         "label": "writing-style check",
         "event": "PostToolUse",
         "matcher": "Write|Edit",

@@ -141,12 +141,12 @@ fi
 
 log "emitted: $message"
 
-# Clean hook output is discarded: this client renders hook results only when a hook
-# signals a problem, which is why systemMessage and additionalContext both went nowhere.
-# Exit 2 is the "blocking error" code, and its stderr does surface. Abusing the error
-# channel for a notice is ugly, but an update the user never hears about is worse.
-#
-# Only on an actual update. Every other path still exits 0 in silence.
+# SessionStart hook output reaches nobody on this client: clean stdout, model context and
+# a non-zero exit with stderr were all discarded. So the notice is parked in a file and
+# picked up by the UserPromptSubmit hook on the next thing the user types. Tool-shaped
+# events do reach the model, which is the whole reason that route exists.
 printf '%s
-' "$message" >&2
-exit 2
+' "$message" > "$HOME/.claude/.claude-config-pending-notice" 2>/dev/null
+log "notice parked for the next prompt"
+
+exit 0

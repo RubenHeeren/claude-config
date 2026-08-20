@@ -139,6 +139,17 @@ that gap.
 
 ## Diagnosing the self-update
 
+### How the notice reaches you
+
+`SessionStart` hook output reaches nobody on the Windows desktop client. Clean stdout, a
+`systemMessage`, `additionalContext` and a non-zero exit with stderr were all discarded,
+tested one at a time. Tool-shaped events do get through, which the `PostToolUse`
+writing-style check demonstrates every time it fires.
+
+So the update parks its message in `~/.claude/.claude-config-pending-notice`, and a
+`UserPromptSubmit` hook injects it into Claude's context the next time you type something,
+then deletes the file. You hear it once, in Claude's first reply, rather than not at all.
+
 The hook runs synchronously. An async `SessionStart` hook is killed when startup finishes,
 which cuts `git ls-remote` off mid-call and leaves the lock held. Synchronous costs one
 `ls-remote` at most once every 4 hours, capped by a 15 second timeout.

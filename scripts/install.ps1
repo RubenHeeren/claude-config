@@ -90,6 +90,16 @@ $wanted = @(
         }
     },
     @{
+        Label   = 'update notice'
+        Event   = 'UserPromptSubmit'
+        Matcher = $null
+        Hook    = [pscustomobject]@{
+            type    = 'command'
+            command = 'bash "$HOME/claude-config/scripts/notify-pending-update.sh"'
+            timeout = 10
+        }
+    },
+    @{
         Label   = 'writing-style check'
         Event   = 'PostToolUse'
         Matcher = 'Write|Edit'
