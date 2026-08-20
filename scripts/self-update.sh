@@ -25,14 +25,36 @@ stamp="$HOME/.claude/.claude-config-checked"
 logfile="$HOME/.claude/claude-config-update.log"
 interval_hours="${CLAUDE_CONFIG_CHECK_HOURS:-4}"
 
-# A background script that exits silently on eight different conditions is unmaintainable
-# without a trace. One run per file, overwritten, so it never grows.
+# A background script that exits silently on nine different conditions is unmaintainable
+# without a trace. Appended, not overwritten: SessionStart fires more than once per restart
+# and an overwriting log erases the run that actually did the work.
 mkdir -p "$(dirname "$logfile")" 2>/dev/null
-: > "$logfile" 2>/dev/null
-log() { printf '%s %s
-' "$(date +%H:%M:%S)" "$*" >> "$logfile" 2>/dev/null; }
+run_id="$$"
+log() { printf '%s [%s] %s
+' "$(date +%H:%M:%S)" "$run_id" "$*" >> "$logfile" 2>/dev/null; }
 
-log "start repo=$repo_dir shell=$0 git=$(command -v git || echo MISSING)"
+# Keep the file bounded without losing the current run.
+if [ -f "$logfile" ] && [ "$(wc -l < "$logfile" 2>/dev/null || echo 0)" -gt 200 ]; then
+    tail -n 80 "$logfile" > "$logfile.trim" 2>/dev/null && mv "$logfile.trim" "$logfile" 2>/dev/null
+fi
+
+log "start repo=$repo_dir git=$(command -v git || echo MISSING)"
+
+# One writer at a time. Two concurrent runs both pass the throttle, then collide on the git
+# index lock and one dies mid-pull. mkdir is atomic on every filesystem that matters.
+lockdir="$HOME/.claude/.claude-config-update.lock"
+if [ -d "$lockdir" ]; then
+    lock_age=$(( $(date +%s) - $(stat -c %Y "$lockdir" 2>/dev/null || stat -f %m "$lockdir" 2>/dev/null || echo 0) ))
+    if [ "$lock_age" -gt 300 ]; then
+        log "clearing stale lock (${lock_age}s old)"
+        rmdir "$lockdir" 2>/dev/null
+    fi
+fi
+if ! mkdir "$lockdir" 2>/dev/null; then
+    log "another run holds the lock, skipping"
+    exit 0
+fi
+trap 'rmdir "$lockdir" 2>/dev/null' EXIT
 
 file_mtime() {
     # GNU stat first, BSD/macOS stat second.
