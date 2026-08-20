@@ -41,15 +41,21 @@ macOS and Linux:
 ./scripts/install.sh
 ```
 
-Both take an optional flag that also writes `"outputStyle": "Ruben"` into
-`~/.claude/settings.json`: `-SetOutputStyle` on PowerShell, `--set-output-style` on bash.
+Both take an optional flag that switches everything on: `-Activate` on PowerShell,
+`--activate` on bash. It merges two things into `~/.claude/settings.json`, key by key:
 
-**Ask before using that flag.** It changes how every future session behaves on this machine.
-Without it, the style is installed but stays inactive until the user picks it in
-`/output-style`.
+- `"outputStyle": "Ruben"`, so the style is live rather than just installed.
+- A `SessionStart` hook running `scripts/self-update.sh`, so this machine keeps itself in
+  step with the repo.
 
-The bash script needs `jq` for the settings merge and skips that step with a warning when
-`jq` is absent. The PowerShell script has no dependency.
+**Ask before using that flag.** It changes how every future session on this machine behaves,
+and the hook pulls and runs code from the repo on a schedule. Without it, the files are
+installed and nothing is switched on.
+
+Both are idempotent: re-running will not add a second copy of the hook.
+
+The bash script needs `python3` (or `python`) for the settings merge and skips that step with
+a warning when neither is present. The PowerShell script has no dependency.
 
 ## 3. Confirm
 

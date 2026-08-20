@@ -2,19 +2,20 @@
     Copies this repo's Claude config into the current machine's ~/.claude.
 
     Idempotent and non-destructive: an existing file is backed up to <name>.bak-<timestamp>
-    before it is replaced, and settings.json is never overwritten wholesale.
+    before it is replaced, and settings.json is merged key by key, never overwritten.
 
-    Usage:  pwsh -File scripts/install.ps1 [-SetOutputStyle]
+    Usage:  pwsh -File scripts/install.ps1 [-Activate]
 #>
 [CmdletBinding()]
 param(
-    # Also write "outputStyle": "Ruben" into ~/.claude/settings.json.
-    [switch]$SetOutputStyle
+    # Also activate the output style and install the self-update SessionStart hook.
+    [switch]$Activate
 )
 
 $ErrorActionPreference = 'Stop'
 
-$repoHome  = Join-Path $PSScriptRoot '..\home' | Resolve-Path
+$repoRoot  = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$repoHome  = Join-Path $repoRoot 'home'
 $claudeDir = Join-Path $HOME '.claude'
 $stamp     = Get-Date -Format 'yyyyMMdd-HHmmss'
 
@@ -25,14 +26,12 @@ function Copy-Tracked {
     if (-not (Test-Path $parent)) { New-Item -ItemType Directory -Path $parent -Force | Out-Null }
 
     if (Test-Path $Destination) {
-        # Same content already in place, nothing to do.
         if ((Get-FileHash $Source).Hash -eq (Get-FileHash $Destination).Hash) {
             Write-Host "  unchanged  $Destination"
             return
         }
-        $backup = "$Destination.bak-$stamp"
-        Copy-Item $Destination $backup
-        Write-Host "  backed up  $backup"
+        Copy-Item $Destination "$Destination.bak-$stamp"
+        Write-Host "  backed up  $Destination.bak-$stamp"
     }
 
     Copy-Item $Source $Destination -Force
@@ -49,28 +48,67 @@ Get-ChildItem (Join-Path $repoHome 'output-styles') -Filter *.md | ForEach-Objec
                  -Destination (Join-Path $claudeDir "output-styles\$($_.Name)")
 }
 
-if ($SetOutputStyle) {
-    $settingsPath = Join-Path $claudeDir 'settings.json'
+if (-not $Activate) {
+    Write-Host ""
+    Write-Host "Files are installed but nothing is switched on. Re-run with -Activate to set"
+    Write-Host "the output style and install the self-update hook, or do it yourself:"
+    Write-Host "  /output-style  ->  pick Ruben"
+    Write-Host ""
+    Write-Host "Done."
+    return
+}
 
-    # Merge the one key rather than replacing the file: settings.json holds machine-specific
-    # values (marketplace paths, enabled plugins) that must survive.
-    if (Test-Path $settingsPath) {
-        Copy-Item $settingsPath "$settingsPath.bak-$stamp"
-        $settings = Get-Content $settingsPath -Raw | ConvertFrom-Json
-    }
-    else {
-        $settings = [pscustomobject]@{}
-    }
+$settingsPath = Join-Path $claudeDir 'settings.json'
 
-    $settings | Add-Member -NotePropertyName 'outputStyle' -NotePropertyValue 'Ruben' -Force
-    $settings | ConvertTo-Json -Depth 20 | Set-Content $settingsPath -Encoding utf8
-    Write-Host "  set        outputStyle = Ruben"
+# Merge key by key: settings.json holds machine-specific values (marketplace paths,
+# enabled plugins, effort level) that must survive.
+if (Test-Path $settingsPath) {
+    Copy-Item $settingsPath "$settingsPath.bak-$stamp"
+    Write-Host "  backed up  $settingsPath.bak-$stamp"
+    $settings = Get-Content $settingsPath -Raw | ConvertFrom-Json
 }
 else {
-    Write-Host ""
-    Write-Host "Output style is installed but not active. Run /output-style and pick Ruben,"
-    Write-Host "or re-run this script with -SetOutputStyle."
+    $settings = [pscustomobject]@{}
 }
 
+$settings | Add-Member -NotePropertyName 'outputStyle' -NotePropertyValue 'Ruben' -Force
+Write-Host "  set        outputStyle = Ruben"
+
+# The self-update hook. $HOME is left unexpanded on purpose: the same string has to
+# resolve on every machine, which is why the clone must live at ~/claude-config.
+$hookCommand = 'bash "$HOME/claude-config/scripts/self-update.sh"'
+
+if (-not $settings.PSObject.Properties['hooks']) {
+    $settings | Add-Member -NotePropertyName 'hooks' -NotePropertyValue ([pscustomobject]@{}) -Force
+}
+if (-not $settings.hooks.PSObject.Properties['SessionStart']) {
+    $settings.hooks | Add-Member -NotePropertyName 'SessionStart' -NotePropertyValue @() -Force
+}
+
+# Don't add a second copy if it is already there.
+$existing = @($settings.hooks.SessionStart) | Where-Object {
+    $_.hooks | Where-Object { $_.command -eq $hookCommand }
+}
+
+if ($existing) {
+    Write-Host "  unchanged  self-update hook (already present)"
+}
+else {
+    $entry = [pscustomobject]@{
+        hooks = @(
+            [pscustomobject]@{
+                type    = 'command'
+                command = $hookCommand
+                async   = $true
+                timeout = 30
+            }
+        )
+    }
+    $settings.hooks.SessionStart = @($settings.hooks.SessionStart) + $entry
+    Write-Host "  installed  self-update hook (SessionStart)"
+}
+
+$settings | ConvertTo-Json -Depth 20 | Set-Content $settingsPath -Encoding utf8
+
 Write-Host ""
-Write-Host "Done."
+Write-Host "Done. Restart Claude Code to pick up the output style and the hook."

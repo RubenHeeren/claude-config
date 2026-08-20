@@ -2,6 +2,42 @@
 
 My personal Claude Code config, so a new machine behaves like the last one.
 
+## Quick start
+
+On a new machine, paste this into Claude Code:
+
+```
+Set up my Claude Code config from https://github.com/RubenHeeren/claude-config
+
+- Clone it to ~/claude-config. If that directory already exists, git pull in it instead.
+- Run the installer with the activate flag: scripts/install.ps1 -Activate on Windows,
+  scripts/install.sh --activate on macOS or Linux.
+- Show me exactly what the installer printed.
+- Then tell me to restart Claude Code.
+
+Change nothing else in ~/.claude.
+```
+
+That leaves the machine fully set up: writing style, output style active, and the
+self-update hook installed so it stays current on its own.
+
+The repo is private, so git needs credentials on that machine first. `gh auth login` is
+the quickest route if the GitHub CLI is there.
+
+Prefer no Claude in the loop:
+
+```bash
+git clone https://github.com/RubenHeeren/claude-config ~/claude-config
+cd ~/claude-config && ./scripts/install.sh --activate      # macOS, Linux
+```
+
+```powershell
+git clone https://github.com/RubenHeeren/claude-config $HOME/claude-config
+cd $HOME/claude-config; pwsh -File scripts/install.ps1 -Activate   # Windows
+```
+
+Restart Claude Code afterwards either way.
+
 ## What is in here
 
 | Path | Installs to | What it does |
@@ -13,35 +49,22 @@ The two are deliberately separate. `CLAUDE.md` is appended context and governs t
 gets written into files. An output style replaces part of the system prompt and governs the
 conversation. Mixing them makes both unreliable.
 
-## Setting up a machine
+## What the installer does
 
-```bash
-git clone https://github.com/RubenHeeren/claude-config
-cd claude-config
-```
+From inside a clone, `/setup-ruben-claude` drives it, or run the script directly.
 
-Then either run the skill from inside the repo:
+Without a flag it only copies files. With `-Activate` (PowerShell) or `--activate` (bash) it
+also merges two keys into `~/.claude/settings.json`:
 
-```
-/setup-ruben-claude
-```
-
-or run the installer directly:
-
-```powershell
-pwsh -File scripts/install.ps1          # Windows
-```
-
-```bash
-./scripts/install.sh                    # macOS, Linux
-```
-
-Add `-SetOutputStyle` (PowerShell) or `--set-output-style` (bash) to also activate the output
-style by writing `"outputStyle": "Ruben"` into `~/.claude/settings.json`. Without it, run
-`/output-style` and pick **Ruben**.
+- `"outputStyle": "Ruben"`, so the style is live rather than merely installed.
+- A `SessionStart` hook running `scripts/self-update.sh`.
 
 Both scripts are idempotent. An existing file is backed up to `<name>.bak-<timestamp>` before
-it is replaced, and `settings.json` is merged rather than overwritten.
+it is replaced, `settings.json` is merged key by key rather than overwritten, and re-running
+never adds a second copy of the hook.
+
+The bash installer needs `python3` for the settings merge and skips that step with a warning
+if it is missing. The PowerShell one has no dependency.
 
 ## Changing the config
 
