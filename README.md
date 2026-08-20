@@ -137,6 +137,18 @@ What it also does not cover: claude.ai, the desktop app and mobile do not read
 `~/.claude/CLAUDE.md`. Paste the same rules into the claude.ai personal preferences to close
 that gap.
 
+## Diagnosing the self-update
+
+`~/.claude/claude-config-update.log` records every run, one line per decision, tagged with
+the process id. It is appended and trimmed to the last 80 lines, never overwritten, because
+`SessionStart` fires more than once per restart and an overwriting log erases the run that
+did the work.
+
+Only one run may touch the repo at a time, guarded by an `mkdir` lock at
+`~/.claude/.claude-config-update.lock`. Without it two runs clear the throttle together and
+collide on the git index, which looks exactly like the update silently not happening. A lock
+older than five minutes is treated as stale and cleared.
+
 ## The output style
 
 `direct-no-bs` is a communication preference, not a persona. It says how to talk to me, not who to be. The sentence rules borrow from ASD-STE100 Simplified Technical English, which exists so
