@@ -52,7 +52,7 @@ conversation. Mixing them makes both unreliable.
 
 ## What the installer does
 
-From inside a clone, `/setup-ruben-claude` drives it, or run the script directly.
+From inside a clone, run the script for your platform.
 
 Without a flag it only copies files. With `-Activate` (PowerShell) or `--activate` (bash) it
 also merges into `~/.claude/settings.json`:
