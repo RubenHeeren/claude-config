@@ -87,24 +87,45 @@ print("  set        outputStyle = direct-no-bs")
 
 # $HOME is left unexpanded on purpose: the same string has to resolve on every machine,
 # which is why the clone must live at ~/claude-config.
-command = 'bash "$HOME/claude-config/scripts/self-update.sh"'
+WANTED = [
+    {
+        "label": "self-update hook",
+        "event": "SessionStart",
+        "matcher": None,
+        "hook": {
+            "type": "command",
+            "command": 'bash "$HOME/claude-config/scripts/self-update.sh"',
+            "async": True,
+            "timeout": 30,
+        },
+    },
+    {
+        "label": "writing-style check",
+        "event": "PostToolUse",
+        "matcher": "Write|Edit",
+        "hook": {
+            "type": "command",
+            "command": 'bash "$HOME/claude-config/scripts/check-writing-style.sh"',
+            "timeout": 15,
+        },
+    },
+]
 
 hooks = data.setdefault("hooks", {})
-session_start = hooks.setdefault("SessionStart", [])
 
-already = any(
-    hook.get("command") == command
-    for group in session_start
-    for hook in group.get("hooks", [])
-)
+for spec in WANTED:
+    groups = hooks.setdefault(spec["event"], [])
+    command = spec["hook"]["command"]
 
-if already:
-    print("  unchanged  self-update hook (already present)")
-else:
-    session_start.append({
-        "hooks": [{"type": "command", "command": command, "async": True, "timeout": 30}]
-    })
-    print("  installed  self-update hook (SessionStart)")
+    if any(h.get("command") == command for g in groups for h in g.get("hooks", [])):
+        print(f"  unchanged  {spec['label']} (already present)")
+        continue
+
+    group = {"hooks": [spec["hook"]]}
+    if spec["matcher"]:
+        group["matcher"] = spec["matcher"]
+    groups.append(group)
+    print(f"  installed  {spec['label']} ({spec['event']})")
 
 os.makedirs(os.path.dirname(path), exist_ok=True)
 with open(path, "w", encoding="utf-8") as fh:

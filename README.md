@@ -55,10 +55,11 @@ conversation. Mixing them makes both unreliable.
 From inside a clone, `/setup-ruben-claude` drives it, or run the script directly.
 
 Without a flag it only copies files. With `-Activate` (PowerShell) or `--activate` (bash) it
-also merges two keys into `~/.claude/settings.json`:
+also merges into `~/.claude/settings.json`:
 
 - `"outputStyle": "direct-no-bs"`, so the style is live rather than merely installed.
 - A `SessionStart` hook running `scripts/self-update.sh`.
+- A `PostToolUse` hook on `Write|Edit` running `scripts/check-writing-style.sh`.
 
 Both scripts are idempotent. An existing file is backed up to `<name>.bak-<timestamp>` before
 it is replaced, `settings.json` is merged key by key rather than overwritten, and re-running
@@ -114,6 +115,27 @@ have been loaded. So when the hook does pull something, it says so:
 That is the only thing this script ever prints. If an update lands and no message appears,
 `async: true` is swallowing hook stdout on your Claude Code version. Set it to `false` in
 the hook and the message will show, at the cost of blocking startup on one `ls-remote` call.
+
+## Enforcing the writing style
+
+`CLAUDE.md` puts the rules in context. It does not check anything, and the em dash rule is
+the one that slips, because models emit them readily and a long session dilutes early
+context.
+
+So `scripts/check-writing-style.sh` runs after every `Write` and `Edit` and scans the file
+for em dashes and en dashes. On a hit it returns `decision: "block"` with the offending
+lines. On `PostToolUse` that feeds the reason back to Claude and the turn continues, so a
+legitimate dash costs one sentence of judgement rather than a hard failure.
+
+It only looks at text-ish suffixes, and skips any file containing the token
+`allow-em-dash`. Use that for quoted material, test fixtures, or a document about this rule.
+
+What it cannot catch: text that only ever appears in the chat, such as an email draft you
+read in the terminal and never save. No hook sees that.
+
+What it also does not cover: claude.ai, the desktop app and mobile do not read
+`~/.claude/CLAUDE.md`. Paste the same rules into the claude.ai personal preferences to close
+that gap.
 
 ## The output style
 

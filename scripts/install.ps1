@@ -74,38 +74,60 @@ else {
 $settings | Add-Member -NotePropertyName 'outputStyle' -NotePropertyValue 'direct-no-bs' -Force
 Write-Host "  set        outputStyle = direct-no-bs"
 
-# The self-update hook. $HOME is left unexpanded on purpose: the same string has to
-# resolve on every machine, which is why the clone must live at ~/claude-config.
-$hookCommand = 'bash "$HOME/claude-config/scripts/self-update.sh"'
+# $HOME is left unexpanded on purpose: the same string has to resolve on every machine,
+# which is why the clone must live at ~/claude-config.
+$wanted = @(
+    @{
+        Label   = 'self-update hook'
+        Event   = 'SessionStart'
+        Matcher = $null
+        Hook    = [pscustomobject]@{
+            type    = 'command'
+            command = 'bash "$HOME/claude-config/scripts/self-update.sh"'
+            async   = $true
+            timeout = 30
+        }
+    },
+    @{
+        Label   = 'writing-style check'
+        Event   = 'PostToolUse'
+        Matcher = 'Write|Edit'
+        Hook    = [pscustomobject]@{
+            type    = 'command'
+            command = 'bash "$HOME/claude-config/scripts/check-writing-style.sh"'
+            timeout = 15
+        }
+    }
+)
 
 if (-not $settings.PSObject.Properties['hooks']) {
     $settings | Add-Member -NotePropertyName 'hooks' -NotePropertyValue ([pscustomobject]@{}) -Force
 }
-if (-not $settings.hooks.PSObject.Properties['SessionStart']) {
-    $settings.hooks | Add-Member -NotePropertyName 'SessionStart' -NotePropertyValue @() -Force
-}
 
-# Don't add a second copy if it is already there.
-$existing = @($settings.hooks.SessionStart) | Where-Object {
-    $_.hooks | Where-Object { $_.command -eq $hookCommand }
-}
-
-if ($existing) {
-    Write-Host "  unchanged  self-update hook (already present)"
-}
-else {
-    $entry = [pscustomobject]@{
-        hooks = @(
-            [pscustomobject]@{
-                type    = 'command'
-                command = $hookCommand
-                async   = $true
-                timeout = 30
-            }
-        )
+foreach ($spec in $wanted) {
+    if (-not $settings.hooks.PSObject.Properties[$spec.Event]) {
+        $settings.hooks | Add-Member -NotePropertyName $spec.Event -NotePropertyValue @() -Force
     }
-    $settings.hooks.SessionStart = @($settings.hooks.SessionStart) + $entry
-    Write-Host "  installed  self-update hook (SessionStart)"
+
+    $groups = @($settings.hooks.($spec.Event))
+
+    # Don't add a second copy if it is already there.
+    $existing = $groups | Where-Object {
+        $_.hooks | Where-Object { $_.command -eq $spec.Hook.command }
+    }
+
+    if ($existing) {
+        Write-Host "  unchanged  $($spec.Label) (already present)"
+        continue
+    }
+
+    $entry = [pscustomobject]@{ hooks = @($spec.Hook) }
+    if ($spec.Matcher) {
+        $entry | Add-Member -NotePropertyName 'matcher' -NotePropertyValue $spec.Matcher -Force
+    }
+
+    $settings.hooks.($spec.Event) = $groups + $entry
+    Write-Host "  installed  $($spec.Label) ($($spec.Event))"
 }
 
 $settings | ConvertTo-Json -Depth 20 | Set-Content $settingsPath -Encoding utf8
