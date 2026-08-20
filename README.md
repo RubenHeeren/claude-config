@@ -56,6 +56,35 @@ but then copy the change back into `home/` or the next machine loses it.
   plugins, effort level. Only the `outputStyle` key is touched.
 - **Plugins.** Install those through the `/plugin` menu.
 
+## Staying up to date
+
+A `SessionStart` hook runs `scripts/self-update.sh` in the background on every machine:
+
+```json
+"hooks": {
+  "SessionStart": [
+    { "hooks": [ { "type": "command",
+                   "command": "bash \"$HOME/claude-config/scripts/self-update.sh\"",
+                   "async": true, "timeout": 30 } ] }
+  ]
+}
+```
+
+It compares `HEAD` against `origin` with `git ls-remote`, which downloads no objects, so the
+usual "already current" case is one cheap round trip. When the remote is ahead it pulls
+fast-forward only and re-runs the installer.
+
+It does nothing, silently, when: the last check was under 4 hours ago, the network is
+unreachable, the working tree is dirty, or the branch has diverged. Set
+`CLAUDE_CONFIG_CHECK_HOURS` to change the interval.
+
+The clone must live at `~/claude-config` for the hook path to resolve. That is why the path
+is under `$HOME` rather than somewhere tidier.
+
+An update applies to the **next** session, not the one that pulled it. `CLAUDE.md` and the
+output style are read at startup, and the hook is async, so it usually finishes after they
+have been loaded.
+
 ## The output style
 
 `Ruben` is a communication preference, not a persona. It says how to talk to me, not who to
