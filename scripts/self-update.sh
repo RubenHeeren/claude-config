@@ -44,11 +44,25 @@ log "start repo=$repo_dir git=$(command -v git || echo MISSING)"
 # index lock and one dies mid-pull. mkdir is atomic on every filesystem that matters.
 lockdir="$HOME/.claude/.claude-config-update.lock"
 if [ -d "$lockdir" ]; then
-    lock_age=$(( $(date +%s) - $(stat -c %Y "$lockdir" 2>/dev/null || stat -f %m "$lockdir" 2>/dev/null || echo 0) ))
-    if [ "$lock_age" -gt 300 ]; then
-        log "clearing stale lock (${lock_age}s old)"
-        rmdir "$lockdir" 2>/dev/null
-    fi
+    # Read the mtime on its own. Folding a failure into the arithmetic used to yield
+    # "0", which made the age the whole Unix epoch and cleared a lock another run was
+    # actively holding. A mutex has to fail closed: an unreadable mtime means leave it.
+    lock_mtime="$(stat -c %Y "$lockdir" 2>/dev/null || stat -f %m "$lockdir" 2>/dev/null || true)"
+
+    case "$lock_mtime" in
+        ''|*[!0-9]*)
+            log "lock present but its age is unreadable, leaving it alone"
+            ;;
+        *)
+            lock_age=$(( $(date +%s) - lock_mtime ))
+            if [ "$lock_mtime" -eq 0 ]; then
+                log "lock present with a zero mtime, leaving it alone"
+            elif [ "$lock_age" -gt 300 ]; then
+                log "clearing stale lock (${lock_age}s old)"
+                rmdir "$lockdir" 2>/dev/null
+            fi
+            ;;
+    esac
 fi
 if ! mkdir "$lockdir" 2>/dev/null; then
     log "another run holds the lock, skipping"
