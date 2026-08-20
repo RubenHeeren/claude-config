@@ -106,9 +106,13 @@ changed="$(git diff --name-only "$local_sha" HEAD -- home/ \
     | tr -cd 'A-Za-z0-9._/, -')"
 
 if [ -n "$changed" ]; then
-    printf '{"systemMessage":"Claude config updated: %s. Restart Claude Code to apply it."}\n' "$changed" >&3
+    message="Claude config updated: $changed. Restart Claude Code to apply it."
 else
-    printf '{"systemMessage":"Claude config repo updated (no changes to installed files)."}\n' >&3
+    message="Claude config repo updated (no changes to installed files)."
 fi
+
+printf '{"systemMessage":"%s"}
+' "$message" >&3
+log "emitted: $message"
 
 exit 0
