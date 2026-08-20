@@ -2,15 +2,22 @@
 #
 # Called from a SessionStart hook. Keeps this machine's ~/.claude in step with the repo.
 #
-# Silent by design. Every failure path — offline, no git, dirty tree, diverged branch —
-# exits 0 and prints nothing, because a config sync must never interrupt a session.
+# Silent by design, with one exception: when it actually pulls an update it prints a
+# {"systemMessage": ...} line telling the user to restart. The new config cannot apply to
+# the session that fetched it, because CLAUDE.md and the output style are read at startup,
+# so the user has to be told rather than left to notice.
 #
-# Throttled: it touches a stamp file and does nothing until INTERVAL_HOURS have passed,
-# so it does not make a network call on every single session start.
+# Every failure path — offline, no git, dirty tree, diverged branch — exits 0 and prints
+# nothing, because a config sync must never interrupt a session.
+#
+# Throttled: it does nothing until INTERVAL_HOURS have passed, so it does not make a
+# network call on every single session start.
 
 set -uo pipefail
 
-# Nothing this script prints should ever reach the session.
+# fd 3 keeps a handle on the real stdout. Everything else is discarded, so no stray git
+# output can ever be mistaken for hook JSON.
+exec 3>&1
 exec >/dev/null 2>&1
 
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)" || exit 0
@@ -46,11 +53,26 @@ branch="$(git rev-parse --abbrev-ref HEAD)" || exit 0
 remote_sha="$(git ls-remote origin "refs/heads/$branch" 2>/dev/null | cut -f1)" || exit 0
 [ -n "$remote_sha" ] || exit 0
 
-[ "$(git rev-parse HEAD)" = "$remote_sha" ] && exit 0
+local_sha="$(git rev-parse HEAD)" || exit 0
+[ "$local_sha" = "$remote_sha" ] && exit 0
 
 # --ff-only: if the branches have diverged, stop rather than create a merge commit
 # nobody asked for.
 git pull --ff-only origin "$branch" || exit 0
 
 bash "$repo_dir/scripts/install.sh" || exit 0
+
+# Name the files the user will notice, not the commit subject. tr strips anything that
+# would need JSON escaping, so the message cannot produce malformed output.
+changed="$(git diff --name-only "$local_sha" HEAD -- home/ \
+    | sed 's|^home/||' \
+    | paste -sd', ' - \
+    | tr -cd 'A-Za-z0-9._/, -')"
+
+if [ -n "$changed" ]; then
+    printf '{"systemMessage":"Claude config updated: %s. Restart Claude Code to apply it."}\n' "$changed" >&3
+else
+    printf '{"systemMessage":"Claude config repo updated (no changes to installed files)."}\n' >&3
+fi
+
 exit 0
