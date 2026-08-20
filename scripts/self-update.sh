@@ -141,4 +141,12 @@ fi
 
 log "emitted: $message"
 
-exit 0
+# Clean hook output is discarded: this client renders hook results only when a hook
+# signals a problem, which is why systemMessage and additionalContext both went nowhere.
+# Exit 2 is the "blocking error" code, and its stderr does surface. Abusing the error
+# channel for a notice is ugly, but an update the user never hears about is worse.
+#
+# Only on an actual update. Every other path still exits 0 in silence.
+printf '%s
+' "$message" >&2
+exit 2
