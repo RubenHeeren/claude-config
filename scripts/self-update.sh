@@ -111,8 +111,34 @@ else
     message="Claude config repo updated (no changes to installed files)."
 fi
 
-printf '{"systemMessage":"%s"}
+# Two channels on purpose. systemMessage is meant for the user but Claude Code only
+# surfaces hook output when a hook errors or is slow, so a successful SessionStart hook
+# renders nothing. additionalContext is injected into the model's context instead, so
+# Claude knows and can tell the user in its first reply.
+python_bin=""
+for candidate in python3 python; do
+    if command -v "$candidate" >/dev/null 2>&1; then python_bin="$candidate"; break; fi
+done
+
+if [ -n "$python_bin" ]; then
+    "$python_bin" - "$message" <<'EMIT' >&3
+import json, sys
+message = sys.argv[1]
+print(json.dumps({
+    "systemMessage": message,
+    "hookSpecificOutput": {
+        "hookEventName": "SessionStart",
+        "additionalContext": (
+            f"{message} Tell the user this at the start of your reply, in one short line."
+        ),
+    },
+}))
+EMIT
+else
+    printf '{"systemMessage":"%s"}
 ' "$message" >&3
+fi
+
 log "emitted: $message"
 
 exit 0
