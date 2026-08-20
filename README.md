@@ -62,5 +62,3 @@ but then copy the change back into `home/` or the next machine loses it.
 be. The sentence rules borrow from ASD-STE100 Simplified Technical English, which exists so
 that instructions cannot be misread, minus its restricted dictionary. That dictionary is what
 makes the standard work for aircraft manuals and useless for discussing code.
-
-<!-- self-update probe -->
