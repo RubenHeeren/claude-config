@@ -44,7 +44,7 @@ Restart Claude Code afterwards either way.
 | Path | Installs to | What it does |
 |---|---|---|
 | `home/CLAUDE.md` | `~/.claude/CLAUDE.md` | Writing style for everything I ship: UI copy, release notes, commit messages, docs |
-| `home/output-styles/ruben.md` | `~/.claude/output-styles/ruben.md` | How Claude talks to me in the terminal |
+| `home/output-styles/direct-no-bs.md` | `~/.claude/output-styles/direct-no-bs.md` | How Claude talks to me |
 
 The two are deliberately separate. `CLAUDE.md` is appended context and governs the text that
 gets written into files. An output style replaces part of the system prompt and governs the
@@ -58,46 +58,26 @@ Without a flag it only copies files. With `-Activate` (PowerShell) or `--activat
 also merges into `~/.claude/settings.json`:
 
 - `"outputStyle": "direct-no-bs"`, so the style is live rather than merely installed.
-- A `SessionStart` hook running `scripts/self-update.sh`.
-- A `PostToolUse` hook on `Write|Edit` running `scripts/check-writing-style.sh`.
+- Three hooks, all pointing at scripts in this repo:
 
-Both scripts are idempotent. An existing file is backed up to `<name>.bak-<timestamp>` before
-it is replaced, `settings.json` is merged key by key rather than overwritten, and re-running
-never adds a second copy of the hook.
+| Hook | Event | Job |
+|---|---|---|
+| `self-update.sh` | `SessionStart` | Pull if origin is ahead, install, park a notice |
+| `notify-pending-update.sh` | `UserPromptSubmit` | Deliver that notice once, then delete it |
+| `check-writing-style.sh` | `PostToolUse` on `Write`/`Edit` | Reject em dashes and en dashes |
+
+Both installers are idempotent. An existing file is backed up to `<name>.bak-<timestamp>`
+before it is replaced, `settings.json` is merged key by key rather than overwritten, and a
+hook that is already present is updated in place instead of duplicated.
 
 The bash installer needs `python3` for the settings merge and skips that step with a warning
 if it is missing. The PowerShell one has no dependency.
 
-## Changing the config
-
-Edit the file in `home/`, run the installer, commit. Editing `~/.claude` directly works too,
-but then copy the change back into `home/` or the next machine loses it.
-
-## Not synced, on purpose
-
-- **`~/.claude/skills/`.** Several are third-party. Vendoring them here would fork someone
-  else's work and go stale.
-- **`~/.claude/settings.json`.** It holds machine-specific values: marketplace paths, enabled
-  plugins, effort level. Only the `outputStyle` key is touched.
-- **Plugins.** Install those through the `/plugin` menu.
-
 ## Staying up to date
 
-A `SessionStart` hook runs `scripts/self-update.sh` in the background on every machine:
-
-```json
-"hooks": {
-  "SessionStart": [
-    { "hooks": [ { "type": "command",
-                   "command": "bash \"$HOME/claude-config/scripts/self-update.sh\"",
-                   "async": true, "timeout": 30 } ] }
-  ]
-}
-```
-
-It compares `HEAD` against `origin` with `git ls-remote`, which downloads no objects, so the
-usual "already current" case is one cheap round trip. When the remote is ahead it pulls
-fast-forward only and re-runs the installer.
+The `SessionStart` hook compares `HEAD` against `origin` with `git ls-remote`, which
+downloads no objects, so the usual "already current" case is one cheap round trip. When the
+remote is ahead it pulls fast-forward only and re-runs the installer.
 
 It does nothing, silently, when: the last check was under 4 hours ago, the network is
 unreachable, the working tree is dirty, or the branch has diverged. Set
@@ -107,14 +87,12 @@ The clone must live at `~/claude-config` for the hook path to resolve. That is w
 is under `$HOME` rather than somewhere tidier.
 
 An update applies to the **next** session, not the one that pulled it. `CLAUDE.md` and the
-output style are read at startup, and the hook is async, so it usually finishes after they
-have been loaded. So when the hook does pull something, it says so:
+output style are read at startup, before the hook finishes. So when the hook pulls something
+it says so, on your next message:
 
-> Claude config updated: output-styles/ruben.md. Restart Claude Code to apply it.
+> Claude config updated: output-styles/direct-no-bs.md. Restart Claude Code to apply it.
 
-That is the only thing this script ever prints. If an update lands and no message appears,
-`async: true` is swallowing hook stdout on your Claude Code version. Set it to `false` in
-the hook and the message will show, at the cost of blocking startup on one `ls-remote` call.
+See "How the notice reaches you" below for why it arrives then rather than at startup.
 
 ## Enforcing the writing style
 
@@ -166,6 +144,7 @@ older than five minutes is treated as stale and cleared.
 
 ## The output style
 
-`direct-no-bs` is a communication preference, not a persona. It says how to talk to me, not who to be. The sentence rules borrow from ASD-STE100 Simplified Technical English, which exists so
+`direct-no-bs` is a communication preference, not a persona. It says how to talk to me, not
+who to be. The sentence rules borrow from ASD-STE100 Simplified Technical English, which exists so
 that instructions cannot be misread, minus its restricted dictionary. That dictionary is what
 makes the standard work for aircraft manuals and useless for discussing code.
