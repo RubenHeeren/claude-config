@@ -92,11 +92,13 @@ WANTED = [
         "label": "self-update hook",
         "event": "SessionStart",
         "matcher": None,
+        # Not async: an async SessionStart hook is killed when startup finishes, which
+        # cuts the network call off mid-flight. Synchronous costs one ls-remote at most
+        # once every 4 hours.
         "hook": {
             "type": "command",
             "command": 'bash "$HOME/claude-config/scripts/self-update.sh"',
-            "async": True,
-            "timeout": 30,
+            "timeout": 15,
         },
     },
     {
@@ -117,8 +119,14 @@ for spec in WANTED:
     groups = hooks.setdefault(spec["event"], [])
     command = spec["hook"]["command"]
 
-    if any(h.get("command") == command for g in groups for h in g.get("hooks", [])):
-        print(f"  unchanged  {spec['label']} (already present)")
+    existing = [h for g in groups for h in g.get("hooks", []) if h.get("command") == command]
+    if existing:
+        # Update in place rather than skipping, so a settings change in this repo reaches
+        # machines that already installed an older version of the hook.
+        for hook in existing:
+            hook.clear()
+            hook.update(spec["hook"])
+        print(f"  updated    {spec['label']} (already present)")
         continue
 
     group = {"hooks": [spec["hook"]]}

@@ -81,11 +81,12 @@ $wanted = @(
         Label   = 'self-update hook'
         Event   = 'SessionStart'
         Matcher = $null
+        # Not async: an async SessionStart hook is killed when startup finishes, which
+        # cuts the network call off mid-flight.
         Hook    = [pscustomobject]@{
             type    = 'command'
             command = 'bash "$HOME/claude-config/scripts/self-update.sh"'
-            async   = $true
-            timeout = 30
+            timeout = 15
         }
     },
     @{
@@ -117,7 +118,15 @@ foreach ($spec in $wanted) {
     }
 
     if ($existing) {
-        Write-Host "  unchanged  $($spec.Label) (already present)"
+        # Replace the group so a settings change in this repo reaches machines that
+        # already installed an older version of the hook.
+        $others = $groups | Where-Object { -not ($_.hooks | Where-Object { $_.command -eq $spec.Hook.command }) }
+        $entry = [pscustomobject]@{ hooks = @($spec.Hook) }
+        if ($spec.Matcher) {
+            $entry | Add-Member -NotePropertyName 'matcher' -NotePropertyValue $spec.Matcher -Force
+        }
+        $settings.hooks.($spec.Event) = @($others) + $entry
+        Write-Host "  updated    $($spec.Label) (already present)"
         continue
     }
 
