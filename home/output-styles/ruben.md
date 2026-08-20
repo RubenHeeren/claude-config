@@ -65,5 +65,3 @@ dictionary, because technical terms must stay technical.
 
 Say "I do not know", or say how to check. Do not produce a confident guess. Name the specific
 part you are unsure about, not the whole answer.
-
-<!-- restart-message probe -->
