@@ -139,6 +139,10 @@ that gap.
 
 ## Diagnosing the self-update
 
+The hook runs synchronously. An async `SessionStart` hook is killed when startup finishes,
+which cuts `git ls-remote` off mid-call and leaves the lock held. Synchronous costs one
+`ls-remote` at most once every 4 hours, capped by a 15 second timeout.
+
 `~/.claude/claude-config-update.log` records every run, one line per decision, tagged with
 the process id. It is appended and trimmed to the last 80 lines, never overwritten, because
 `SessionStart` fires more than once per restart and an overwriting log erases the run that
