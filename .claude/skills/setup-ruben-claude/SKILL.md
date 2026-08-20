@@ -44,7 +44,7 @@ macOS and Linux:
 Both take an optional flag that switches everything on: `-Activate` on PowerShell,
 `--activate` on bash. It merges two things into `~/.claude/settings.json`, key by key:
 
-- `"outputStyle": "Ruben"`, so the style is live rather than just installed.
+- `"outputStyle": "direct-no-bs"`, so the style is live rather than just installed.
 - A `SessionStart` hook running `scripts/self-update.sh`, so this machine keeps itself in
   step with the repo.
 
@@ -63,7 +63,7 @@ Report what the script printed: installed, unchanged, backed up. Then tell the u
 remaining manual step:
 
 - If the flag was used: restart Claude Code for the output style to take effect.
-- If it was not: run `/output-style` and pick **Ruben**.
+- If it was not: run `/output-style` and pick **direct-no-bs**.
 
 ## What this skill does not do
 

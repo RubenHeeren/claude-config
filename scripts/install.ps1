@@ -52,7 +52,7 @@ if (-not $Activate) {
     Write-Host ""
     Write-Host "Files are installed but nothing is switched on. Re-run with -Activate to set"
     Write-Host "the output style and install the self-update hook, or do it yourself:"
-    Write-Host "  /output-style  ->  pick Ruben"
+    Write-Host "  /output-style  ->  pick direct-no-bs"
     Write-Host ""
     Write-Host "Done."
     return
@@ -71,8 +71,8 @@ else {
     $settings = [pscustomobject]@{}
 }
 
-$settings | Add-Member -NotePropertyName 'outputStyle' -NotePropertyValue 'Ruben' -Force
-Write-Host "  set        outputStyle = Ruben"
+$settings | Add-Member -NotePropertyName 'outputStyle' -NotePropertyValue 'direct-no-bs' -Force
+Write-Host "  set        outputStyle = direct-no-bs"
 
 # The self-update hook. $HOME is left unexpanded on purpose: the same string has to
 # resolve on every machine, which is why the clone must live at ~/claude-config.

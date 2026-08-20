@@ -56,7 +56,7 @@ From inside a clone, `/setup-ruben-claude` drives it, or run the script directly
 Without a flag it only copies files. With `-Activate` (PowerShell) or `--activate` (bash) it
 also merges two keys into `~/.claude/settings.json`:
 
-- `"outputStyle": "Ruben"`, so the style is live rather than merely installed.
+- `"outputStyle": "direct-no-bs"`, so the style is live rather than merely installed.
 - A `SessionStart` hook running `scripts/self-update.sh`.
 
 Both scripts are idempotent. An existing file is backed up to `<name>.bak-<timestamp>` before
@@ -116,7 +116,6 @@ the hook and the message will show, at the cost of blocking startup on one `ls-r
 
 ## The output style
 
-`Ruben` is a communication preference, not a persona. It says how to talk to me, not who to
-be. The sentence rules borrow from ASD-STE100 Simplified Technical English, which exists so
+`direct-no-bs` is a communication preference, not a persona. It says how to talk to me, not who to be. The sentence rules borrow from ASD-STE100 Simplified Technical English, which exists so
 that instructions cannot be misread, minus its restricted dictionary. That dictionary is what
 makes the standard work for aircraft manuals and useless for discussing code.

@@ -52,7 +52,7 @@ if [ "$activate" -eq 0 ]; then
 
 Files are installed but nothing is switched on. Re-run with --activate to set the
 output style and install the self-update hook, or do it yourself:
-  /output-style  ->  pick Ruben
+  /output-style  ->  pick direct-no-bs
 
 Done.
 MSG
@@ -82,8 +82,8 @@ if os.path.exists(path):
     with open(path, encoding="utf-8") as fh:
         data = json.load(fh)
 
-data["outputStyle"] = "Ruben"
-print("  set        outputStyle = Ruben")
+data["outputStyle"] = "direct-no-bs"
+print("  set        outputStyle = direct-no-bs")
 
 # $HOME is left unexpanded on purpose: the same string has to resolve on every machine,
 # which is why the clone must live at ~/claude-config.
