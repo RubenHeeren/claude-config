@@ -1,0 +1,6 @@
+# Shell scripts must keep LF even when checked out on Windows. With CRLF, bash
+# fails on the shebang line with a "bad interpreter: no such file" error.
+*.sh text eol=lf
+
+# PowerShell is fine either way; keep it native so it reads correctly in editors.
+*.ps1 text eol=crlf
