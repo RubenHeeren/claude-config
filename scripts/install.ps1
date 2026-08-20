@@ -133,4 +133,4 @@ foreach ($spec in $wanted) {
 $settings | ConvertTo-Json -Depth 20 | Set-Content $settingsPath -Encoding utf8
 
 Write-Host ""
-Write-Host "Done. Restart Claude Code to pick up the output style and the hook."
+Write-Host "Done. Restart Claude Code to pick up the output style and the hooks."

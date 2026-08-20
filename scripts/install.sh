@@ -134,4 +134,4 @@ with open(path, "w", encoding="utf-8") as fh:
 PY
 
 echo
-echo "Done. Restart Claude Code to pick up the output style and the hook."
+echo "Done. Restart Claude Code to pick up the output style and the hooks."
