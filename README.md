@@ -21,8 +21,9 @@ Change nothing else in ~/.claude.
 That leaves the machine fully set up: writing style, output style active, and the
 self-update hook installed so it stays current on its own.
 
-The repo is private, so git needs credentials on that machine first. `gh auth login` is
-the quickest route if the GitHub CLI is there.
+No GitHub account, login or token needed. The repo is public, so `git clone` and the
+self-update hook's `ls-remote` both work unauthenticated. Git itself is the only
+prerequisite.
 
 Prefer no Claude in the loop:
 
