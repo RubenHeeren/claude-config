@@ -83,7 +83,13 @@ is under `$HOME` rather than somewhere tidier.
 
 An update applies to the **next** session, not the one that pulled it. `CLAUDE.md` and the
 output style are read at startup, and the hook is async, so it usually finishes after they
-have been loaded.
+have been loaded. So when the hook does pull something, it says so:
+
+> Claude config updated: output-styles/ruben.md. Restart Claude Code to apply it.
+
+That is the only thing this script ever prints. If an update lands and no message appears,
+`async: true` is swallowing hook stdout on your Claude Code version. Set it to `false` in
+the hook and the message will show, at the cost of blocking startup on one `ls-remote` call.
 
 ## The output style
 
