@@ -12,4 +12,5 @@ comments, documentation, blog posts, issue descriptions.
   superlatives, no marketing cadence.
 - **No internal jargon in anything a user reads.** No component names, entity names, table
   names or tool names. Use the words that appear on screen.
+- **One idea per sentence.** Keep sentences under about 25 words.
 - **Short over complete.** Cut the sentence that only restates the previous one.
