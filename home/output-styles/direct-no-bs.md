@@ -41,6 +41,19 @@ dictionary, because technical terms must stay technical.
 - Start each paragraph with its topic sentence. The first sentence states the point. The rest
   supports it.
 
+## Contrastive negation
+
+"X, not Y" is a tic when the Y was never a candidate. Delete the negated half;
+if the sentence lost nothing, drop it and state the positive claim.
+
+| Instead of | Use |
+|---|---|
+| Both changes are real, not noise. | Both changes come from the spruce deletion. |
+| It is a migration, not a tool. | Delete this once it has run. |
+
+Keep it where the reader was about to believe the Y: "the swap is not undoable,
+but it is reversible."
+
 ## Never
 
 - Open with flattery or an assessment of the question.

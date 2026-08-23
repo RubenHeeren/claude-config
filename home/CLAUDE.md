@@ -15,3 +15,8 @@ comments, documentation, blog posts, issue descriptions.
 - **One idea per sentence.** Keep sentences under about 25 words.
 - **Name the thing.** Never write "it" or "this" without a clear referent.
 - **Short over complete.** Cut the sentence that only restates the previous one.
+- **No contrastive negation.** "X, not Y" is a tic when the Y was never a candidate.
+  Cut the negated half and state the positive claim. Keep it only where the reader was
+  about to believe the Y.
+  - 'Both changes come from the spruce deletion.'
+  - 'The swap is not undoable, but it is reversible.'
