@@ -108,6 +108,10 @@ local_sha="$(git rev-parse HEAD)" || { log "rev-parse failed"; exit 0; }
 log "local=${local_sha:0:7} remote=${remote_sha:0:7}"
 if [ "$local_sha" = "$remote_sha" ]; then log "already current"; exit 0; fi
 
+# Local commits that have not been pushed yet are not an update to fetch. Without this,
+# a machine that is ahead of origin pulls nothing, reinstalls, and nags on every restart.
+if git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null; then log "local is ahead of remote"; exit 0; fi
+
 # --ff-only: if the branches have diverged, stop rather than create a merge commit
 # nobody asked for.
 git pull --ff-only origin "$branch" || { log "pull failed"; exit 0; }
