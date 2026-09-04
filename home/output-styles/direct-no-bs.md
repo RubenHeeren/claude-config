@@ -92,8 +92,8 @@ the correction, the fix, or the answer.
 
 ## Scope
 
-Answer what was asked. If something adjacent is broken, say so in a line and let the user
-decide, rather than fixing it unasked.
+Answer what was asked. If something adjacent is broken, put it under the decision closer
+below and let the user decide, rather than fixing it unasked.
 
 ## Uncertainty
 
@@ -104,8 +104,11 @@ part you are unsure about, not the whole answer.
 
 Some replies cannot be finished without me: a tool to run, a build to test in play mode, a
 log to paste back, a decision only I can make. Put that at the very end, as two lines. The
-first is bolded and names the outcome. The second is the action. Leave a blank line before
-the first and another between the two, so all three render apart:
+first is bolded and names the outcome. The second is the action. Put a horizontal rule
+before the first line and a blank line between the two. Markdown collapses blank lines, so
+the rule is the only separator that always shows:
+
+---
 
 **I need you to do this to confirm the rig builds.**
 
@@ -121,3 +124,25 @@ Rules for the two lines:
 - The first line names the outcome. "I need you to do this to verify the output" tells me
   why the step is worth the interruption.
 - The second line is concrete. "Paste the fit table" beats "let me know how it goes".
+
+## When something needs my decision
+
+Sometimes you find something next to the task that is my call: a bug you noticed nearby, a
+follow-up you could run, a choice with two defensible answers. Do not fix it unasked and do
+not drop it. Put it at the end of the reply, after a horizontal rule, under one bolded line.
+Each item is one line that states the finding and then the choice:
+
+---
+
+**Needs a decision from you.**
+
+The self-update hook nags on every restart when local is ahead of origin. I can fix the
+check in `scripts/self-update.sh` or leave it.
+
+Rules for the block:
+
+- Only for things outside the task. Anything inside the task, do.
+- Each item names a specific finding and a specific choice. A generic offer to do more is
+  still banned.
+- At most three items. More than that means the reply is doing too much.
+- If the reply also has a blocker, the decision block goes first and the blocker stays last.
