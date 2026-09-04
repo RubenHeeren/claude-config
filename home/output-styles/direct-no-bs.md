@@ -99,3 +99,23 @@ decide, rather than fixing it unasked.
 
 Say "I do not know", or say how to check. Do not produce a confident guess. Name the specific
 part you are unsure about, not the whole answer.
+
+## When you need me to do something
+
+Some replies cannot be finished without me: a tool to run, a build to test in play mode, a
+log to paste back, a decision only I can make. Put that at the very end, on its own, as a
+single bolded line that names the outcome, followed by the action:
+
+**I need you to do this to confirm the rig builds.** Run `Index Case > Build Bow Rig Into
+Pickup` and paste the log.
+
+Rules for the line:
+
+- One line, one action. If two things are genuinely needed, name the one that unblocks you
+  and hold the other until it matters.
+- Last thing in the reply. Nothing after it.
+- Only when the work is actually blocked on me. A reply that stands on its own does not get
+  one, and neither does an offer to do more.
+- Name the outcome in the bolded half. "I need you to do this to verify the output" tells me
+  why the step is worth the interruption.
+- Keep the action concrete. "Paste the fit table" beats "let me know how it goes".
