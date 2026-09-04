@@ -25,7 +25,7 @@ No GitHub account, login or token needed. The repo is public, so `git clone` and
 self-update hook's `ls-remote` both work unauthenticated. Git itself is the only
 prerequisite.
 
-Prefer no Claude in the loop:
+Without Claude:
 
 ```bash
 git clone https://github.com/RubenHeeren/claude-config ~/claude-config
@@ -64,7 +64,7 @@ also merges into `~/.claude/settings.json`:
 |---|---|---|
 | `self-update.sh` | `SessionStart` | Pull if origin is ahead, install, park a notice |
 | `notify-pending-update.sh` | `UserPromptSubmit` | Deliver that notice once, then delete it |
-| `check-writing-style.sh` | `PostToolUse` on `Write`/`Edit` | Reject em dashes and en dashes |
+| `check-writing-style.sh` | `PostToolUse` on `Write`/`Edit` | Flag em dashes and en dashes |
 
 Both installers are idempotent. An existing file is backed up to `<name>.bak-<timestamp>`
 before it is replaced, `settings.json` is merged key by key rather than overwritten, and a
@@ -114,7 +114,7 @@ It only looks at text-ish suffixes, and skips any file containing the token
 What it cannot catch: text that only ever appears in the chat, such as an email draft you
 read in the terminal and never save. No hook sees that.
 
-What it also does not cover: claude.ai, the desktop app and mobile do not read
+Other clients are out of its reach too. claude.ai, the desktop app and mobile do not read
 `~/.claude/CLAUDE.md`. Paste the same rules into the claude.ai personal preferences to close
 that gap.
 
@@ -133,7 +133,7 @@ then deletes the file. You hear it once, in Claude's first reply, rather than no
 
 The hook runs synchronously. An async `SessionStart` hook is killed when startup finishes,
 which cuts `git ls-remote` off mid-call and leaves the lock held. Synchronous costs one
-`ls-remote` at most once every 4 hours, capped by a 15 second timeout.
+`ls-remote` per restart, capped by a 15 second timeout.
 
 `~/.claude/claude-config-update.log` records every run, one line per decision, tagged with
 the process id. It is appended and trimmed to the last 80 lines, never overwritten, because
@@ -147,7 +147,7 @@ older than five minutes is treated as stale and cleared.
 
 ## The output style
 
-`direct-no-bs` is a communication preference, not a persona. It says how to talk to me, not
-who to be. The sentence rules borrow from ASD-STE100 Simplified Technical English, which exists so
-that instructions cannot be misread, minus its restricted dictionary. That dictionary is what
-makes the standard work for aircraft manuals and useless for discussing code.
+`direct-no-bs` says how Claude talks to me. The sentence rules borrow from ASD-STE100
+Simplified Technical English, which exists so that instructions cannot be misread, minus its
+restricted dictionary. That dictionary is what makes the standard work for aircraft manuals
+and useless for discussing code.

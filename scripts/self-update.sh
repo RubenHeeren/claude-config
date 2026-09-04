@@ -7,7 +7,7 @@
 # the session that fetched it, because CLAUDE.md and the output style are read at startup,
 # so the user has to be told rather than left to notice.
 #
-# Every failure path — offline, no git, dirty tree, diverged branch — exits 0 and prints
+# Every failure path, offline, no git, dirty tree or diverged branch, exits 0 and prints
 # nothing, because a config sync must never interrupt a session.
 #
 # Throttled: it does nothing until INTERVAL_HOURS have passed, so it does not make a

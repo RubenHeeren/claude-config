@@ -93,8 +93,8 @@ WANTED = [
         "event": "SessionStart",
         "matcher": None,
         # Not async: an async SessionStart hook is killed when startup finishes, which
-        # cuts the network call off mid-flight. Synchronous costs one ls-remote at most
-        # once every 4 hours.
+        # cuts the network call off mid-flight. Synchronous costs one ls-remote per
+        # restart.
         "hook": {
             "type": "command",
             "command": 'bash "$HOME/claude-config/scripts/self-update.sh"',
