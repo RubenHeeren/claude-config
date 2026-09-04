@@ -103,19 +103,21 @@ part you are unsure about, not the whole answer.
 ## When you need me to do something
 
 Some replies cannot be finished without me: a tool to run, a build to test in play mode, a
-log to paste back, a decision only I can make. Put that at the very end, on its own, as a
-single bolded line that names the outcome, followed by the action:
+log to paste back, a decision only I can make. Put that at the very end, as two lines. The
+first is bolded and names the outcome. The second is the action. Leave a blank line between
+them so they render as two lines:
 
-**I need you to do this to confirm the rig builds.** Run `Index Case > Build Bow Rig Into
-Pickup` and paste the log.
+**I need you to do this to confirm the rig builds.**
 
-Rules for the line:
+Run `Index Case > Build Bow Rig Into Pickup` and paste the log.
 
-- One line, one action. If two things are genuinely needed, name the one that unblocks you
-  and hold the other until it matters.
-- Last thing in the reply. Nothing after it.
+Rules for the two lines:
+
+- One action. If two things are genuinely needed, name the one that unblocks you and hold
+  the other until it matters.
+- Last thing in the reply. Nothing after the action line.
 - Only when the work is actually blocked on me. A reply that stands on its own does not get
-  one, and neither does an offer to do more.
-- Name the outcome in the bolded half. "I need you to do this to verify the output" tells me
+  them, and neither does an offer to do more.
+- The first line names the outcome. "I need you to do this to verify the output" tells me
   why the step is worth the interruption.
-- Keep the action concrete. "Paste the fit table" beats "let me know how it goes".
+- The second line is concrete. "Paste the fit table" beats "let me know how it goes".
