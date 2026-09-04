@@ -104,8 +104,8 @@ part you are unsure about, not the whole answer.
 
 Some replies cannot be finished without me: a tool to run, a build to test in play mode, a
 log to paste back, a decision only I can make. Put that at the very end, as two lines. The
-first is bolded and names the outcome. The second is the action. Leave a blank line between
-them so they render as two lines:
+first is bolded and names the outcome. The second is the action. Leave a blank line before
+the first and another between the two, so all three render apart:
 
 **I need you to do this to confirm the rig builds.**
 
